@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <title>To-Do List</title>
+  <style>
+  .container {
+      display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 0 auto;
+        width: 90%; /* 90% width of the page */
+      }
+
+  .lists {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%; /* Take full width of the container */
+    }
+
+    .lists > div {
+      width: 100%; /* Each list takes full width */
+        margin-bottom: 20px; /* Space between lists */
+        }
+    li {
+        background-color: black;
+        border: 1px solid black;
+        color: white;
+        border-radius: 5px;
+        padding: 1px;
+        margin: 10px;
+        display: flex;
+        justify-content: space-between;
+    }
+    #sec1{
+      display: flex;
+      justify-content: space-between;
+      margin:20px;
+
+    }
+    .numbered-list {
+    counter-reset: list-counter; /* Reset the counter for each list */
+}
+
+.numbered-list li {
+    list-style: none;
+     /* Remove default list style */
+}
+
+.numbered-list li::before {
+    content: counter(list-counter); /* Set the content of ::before pseudo-element to the counter value */
+    counter-increment: list-counter; /* Increment the counter */
+    margin-right: 0px; /* Add space between the counter and the content */
+}
+#completedList li{
+  background-color: white;
+  color: black;
+  border: 1px solid black;
+}
+
+#itemName{
+  width: 25%;
+  height: 30px;
+  margin: 20px;
+}
+#deadline{
+  width: 25%;
+  height: 30px;
+  margin: 20px;
+}
+#priority{
+  width: 25%;
+  height: 30px;
+  margin: 20px;
+}
+
+#add{
+  width: 25%;
+  height: 30px;
+  margin: 20px;
+  background-color:black;
+  color:white;
+}
+body *{
+  margin: 10px;
+}
+h1{
+  text-align: center;
+}
+
+
+  </style>
+
+</head>
+<body>
+<!-- SGN -->
+<h1>To-Do List</h1>
+<div id="container">
+<header>
+
+
+<div id="sec1">
+  <input type="text" id="itemName" placeholder="Item Name">
+  <input type="date" id="deadline" placeholder="Deadline" />
+  <select type="select" id="priority" placeholder="Priority">
+    <option disabled selected hidden>Priority</option>
+    <option id="high" value="High">High</option>
+    <option id="medium" value="Medium">Medium</option>
+    <option id="low" value="Low">Low</option>
+  </select>
+  <input type="submit" id="add" value="Add Item">
+</div>
+</header>
+
+<div id="lists">
+<div id="sec2">
+  <h2>Today's ToDoList</h2>
+  <!-- <ol id="todaysList"> </ol> -->
+  <ol id="todaysList" class="numbered-list"></ol>
+</div>
+
+<div id="sec3">
+  <h2>Future ToDoList</h2>
+
+<ol id="futureList" class="numbered-list"></ol>
+</div>
+
+<div id="sec4">
+  <h2>Completed ToDoList</h2>
+    <ol id="completedList" class="numbered-list"></ol>
+</div>
+</div>
+</div>
+<script>
+  const add = document.getElementById("add");
+  let tasks = JSON.parse(localStorage.getItem('todoItems')) || [];
+
+  // Today's Date
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  const formattedDate = `${year}-${month}-${day}`;
+
+  // Add click function
+  add.addEventListener('click', () =>{
+
+    const itemName = document.getElementById("itemName").value;
+    const deadline = document.getElementById("deadline").value;
+    const priority = document.getElementById("priority").value;
+
+    const task = {
+      itemName: itemName,
+      deadline: deadline,
+      priority: priority,
+      completed: false
+    };
+
+    tasks.push(task);
+    localStorage.setItem('todoItems', JSON.stringify(tasks));
+    updateLists();
+  });
+
+  // updateLists
+  function updateLists(){
+    const todaysList = document.getElementById("todaysList");
+    const futureList = document.getElementById("futureList");
+    const completedList = document.getElementById("completedList");
+
+    todaysList.innerHTML = '';
+    futureList.innerHTML = '';
+    completedList.innerHTML = '';
+
+    tasks.forEach(task => {
+      const li = document.createElement("li");
+    const nameSpan = document.createElement("span"); // Create span for item name
+    const deadlineSpan = document.createElement("span"); // Create span for deadline
+    const prioritySpan = document.createElement("span"); // Create span for priority
+
+    const pname = document.createTextNode(`${task.itemName} `);
+    const pdeadline = document.createTextNode(`${task.deadline} `);
+    const ppriority = document.createTextNode(`${task.priority} `);
+
+    nameSpan.appendChild(pname); // Append text nodes to spans
+    deadlineSpan.appendChild(pdeadline);
+    prioritySpan.appendChild(ppriority);
+
+
+      const completed = document.createElement('input');
+       const dlt = document.createElement('button');
+       dlt.setAttribute('type', 'button');
+       dlt.setAttribute('id', 'delete');
+
+       dlt.addEventListener('click', () =>{
+         const taskindx = tasks.indexOf(task);
+         if(taskindx != -1){
+           tasks.splice(taskindx, 1);
+           localStorage.setItem('todoItems', JSON.stringify(tasks));
+           updateLists();
+         }
+
+       });
+
+      completed.setAttribute('type', 'checkbox');
+
+
+      completed.checked = task.completed;
+
+      completed.addEventListener('click', () =>{
+        task.completed = completed.checked;
+        localStorage.setItem('todoItems', JSON.stringify(tasks));
+        updateLists();
+      });
+
+      li.appendChild(nameSpan);
+      li.appendChild(deadlineSpan);
+      li.appendChild(prioritySpan);
+      li.appendChild(completed);
+      li.appendChild(dlt);
+      if(task.completed){
+        completedList.appendChild(li);
+      }else if(task.deadline === formattedDate){
+        todaysList.appendChild(li);
+      }else {
+        futureList.appendChild(li);
+        if(task.deadline < formattedDate){
+          li.style.border = "1px solid red";
+        }
+      }
+    });
+  }
+updateLists();
+</script>
+</body>
+</html>
